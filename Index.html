@@ -1,0 +1,373 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Free CV Maker (Offline-capable)</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" integrity="sha512-+qXQw1XJbG0r3Y2b1a7bK7/0i0mZxgqX7b0Y0z1y9J9b6Wm3qV9d1e5X1w2b3c4d5e6f7g8h9i0j1k2l3m4n5w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    :root{--accent:#0f172a;--muted:#6b7280}
+    body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;line-height:1.5;margin:0;padding:0;background:#f8fafc;color:#0f172a}
+    .container{max-width:980px;margin:24px auto;padding:20px;background:#fff;border-radius:10px;box-shadow:0 6px 24px rgba(15,23,42,0.06)}
+    h1{margin:0 0 8px;font-size:20px}
+    .row{display:flex;gap:16px;flex-wrap:wrap}
+    .col{flex:1;min-width:220px}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input,select,textarea{width:100%;padding:10px;border:1px solid #e6e9ee;border-radius:8px;font-size:14px}
+    textarea{min-height:90px}
+    button{background:var(--accent);color:#fff;padding:10px 14px;border-radius:8px;border:0;cursor:pointer}
+    .small{font-size:13px;color:var(--muted)}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .preview{border:1px dashed #e6e9ee;padding:12px;border-radius:8px;background:#fcfeff}
+    .cv{max-width:800px;margin:8px auto;background:#fff;padding:20px;border-radius:6px}
+    .two-col{display:flex;gap:18px}
+    .left{flex:3}
+    .right{flex:1}
+    .skill{display:inline-block;background:#eef2ff;padding:6px 8px;border-radius:6px;margin:4px 4px 0 0;font-size:13px}
+    .template-select{display:flex;gap:8px}
+    .template-card{border:1px solid #e6e9ee;padding:8px;border-radius:8px;cursor:pointer}
+    .template-card.active{border-color:#7c3aed;box-shadow:0 6px 18px rgba(124,58,237,0.12)}
+    #photo-preview{max-width:120px;border-radius:6px}
+    .export-buttons{display:flex;gap:8px;margin-top:12px}
+    footer{margin-top:18px;font-size:13px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Free CV Maker — Single HTML (Paste & Run)</h1>
+    <p class="small">Bengali UI, but inputs must be entered in English. Client-side only — use in browser or wrap as PWA/APK.</p><div class="row">
+  <div class="col">
+    <label>Language / ভাষা</label>
+    <select id="lang">
+      <option value="en">English</option>
+      <option value="bn">Bengali</option>
+      <option value="hi">Hindi</option>
+    </select>
+  </div>
+  <div class="col">
+    <label>CV Type</label>
+    <select id="cvtype">
+      <option value="professional">Professional</option>
+      <option value="fresher">Fresher</option>
+    </select>
+  </div>
+  <div class="col">
+    <label>Template</label>
+    <div class="template-select">
+      <div class="template-card active" data-template="modern">Modern</div>
+      <div class="template-card" data-template="minimal">Minimal</div>
+      <div class="template-card" data-template="creative">Creative</div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<div class="row">
+  <div class="col">
+    <label>Full Name</label>
+    <input id="name" placeholder="e.g. Purbasha Naskar">
+  </div>
+  <div class="col">
+    <label>Job Title / Target Role</label>
+    <input id="role" placeholder="e.g. Data Entry Intern">
+  </div>
+  <div class="col">
+    <label>Phone</label>
+    <input id="phone" placeholder="e.g. +91 9XXXXXXXXX">
+  </div>
+</div>
+
+<div class="row" style="margin-top:10px">
+  <div class="col">
+    <label>Email</label>
+    <input id="email" placeholder="e.g. your@mail.com">
+  </div>
+  <div class="col">
+    <label>Location</label>
+    <input id="location" placeholder="City, State, Country">
+  </div>
+  <div class="col">
+    <label>Links (LinkedIn/GitHub/Portfolio) — comma separated</label>
+    <input id="links" placeholder="https://... , https://...">
+  </div>
+</div>
+
+<div style="margin-top:12px" class="row">
+  <div class="col">
+    <label>Summary / Objective (short)</label>
+    <textarea id="summary" placeholder="2–3 lines about you and your target role"></textarea>
+  </div>
+  <div class="col">
+    <label>Skills (comma separated)</label>
+    <input id="skills" placeholder="MS Excel, Data Cleaning, Typing 50 WPM">
+  </div>
+</div>
+
+<div style="margin-top:12px" class="row">
+  <div class="col">
+    <label>Education (one per line, format: Degree | Institution | Year | Result)</label>
+    <textarea id="education" placeholder="Class 12 | Hatgacha Haridas Vidyapith | 2026 | 82%"></textarea>
+  </div>
+  <div class="col">
+    <label>Experience / Projects (one per block, separate blocks by --- )</label>
+    <textarea id="experience" placeholder="Role | Company | From–To | Achievement1; Achievement2 --- "></textarea>
+  </div>
+</div>
+
+<div style="margin-top:12px" class="row">
+  <div class="col">
+    <label>Certifications (comma separated)</label>
+    <input id="certs">
+  </div>
+  <div class="col">
+    <label>Languages (comma separated)</label>
+    <input id="langs" placeholder="Bengali (Native), English (Intermediate)">
+  </div>
+  <div class="col">
+    <label>Interests (optional)</label>
+    <input id="interests">
+  </div>
+</div>
+
+<div style="margin-top:12px" class="row">
+  <div class="col">
+    <label>Upload Photo (optional)</label>
+    <input type="file" id="photo" accept="image/*">
+    <div style="margin-top:8px"><img id="photo-preview" src="" alt="" style="display:none"></div>
+  </div>
+  <div class="col">
+    <label>Auto-proofread & Suggestions</label>
+    <div style="display:flex;gap:8px"><button id="suggest">Suggest Wording</button><button id="proof">Auto Proofread</button></div>
+    <p class="small">Suggestion uses simple rules (convert responsibilities → achievements; add metrics prompt).</p>
+  </div>
+  <div class="col">
+    <label>Export Options</label>
+    <div class="export-buttons">
+      <button id="export-pdf">Export PDF</button>
+      <button id="export-docx">Export DOCX</button>
+      <button id="export-png">Export PNG</button>
+      <button id="export-txt">Export TXT</button>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:18px">
+  <button id="generate">Generate Preview</button>
+</div>
+
+<hr>
+
+<div class="preview">
+  <div id="cv-preview" class="cv"></div>
+</div>
+
+<footer>Tip: Paste this file into a local .html and open in browser. Then use <strong>PWABuilder</strong> or wrap in WebView to make an APK.</footer>
+
+  </div>  <!-- Libraries -->  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>  <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/7.2.1/docx.umd.js"></script>  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>  <script>
+    // --- Utilities ---
+    const el = id => document.getElementById(id);
+    let selectedTemplate = 'modern';
+    document.querySelectorAll('.template-card').forEach(tc=>{
+      tc.addEventListener('click',()=>{
+        document.querySelectorAll('.template-card').forEach(x=>x.classList.remove('active'));
+        tc.classList.add('active');
+        selectedTemplate = tc.dataset.template;
+      });
+    });
+
+    // Photo cropper
+    let cropper, photoBlob = null;
+    el('photo').addEventListener('change', e=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      const url = URL.createObjectURL(file);
+      const img = document.createElement('img');
+      img.src = url; img.style.maxWidth='320px';
+      document.body.appendChild(img);
+      if(cropper) cropper.destroy();
+      cropper = new Cropper(img, {aspectRatio:1,viewMode:1,autoCropArea:1,ready(){
+        // show preview after cropping automatically
+        setTimeout(()=>{
+          const canvas = cropper.getCroppedCanvas({width:300,height:300});
+          canvas.toBlob(b=>{photoBlob = b; el('photo-preview').src = URL.createObjectURL(b); el('photo-preview').style.display='block';
+            img.remove();
+          },'image/jpeg');
+        },800);
+      }});
+    });
+
+    // Build CV HTML
+    function buildCV(){
+      const name = el('name').value || 'Full Name';
+      const role = el('role').value || 'Target Role';
+      const phone = el('phone').value || '';
+      const email = el('email').value || '';
+      const location = el('location').value || '';
+      const links = el('links').value.split(',').map(s=>s.trim()).filter(Boolean);
+      const summary = el('summary').value || '';
+      const skills = el('skills').value.split(',').map(s=>s.trim()).filter(Boolean);
+      const education = el('education').value.split('\n').map(s=>s.trim()).filter(Boolean);
+      const experience = el('experience').value.split('---').map(s=>s.trim()).filter(Boolean);
+      const certs = el('certs').value.split(',').map(s=>s.trim()).filter(Boolean);
+      const langs = el('langs').value.split(',').map(s=>s.trim()).filter(Boolean);
+      const interests = el('interests').value || '';
+
+      // Template variations (simple)
+      let headerPhotoHtml = '';
+      if(photoBlob){ headerPhotoHtml = `<div style="text-align:right"><img src="${el('photo-preview').src}" style="width:100px;height:100px;border-radius:8px;object-fit:cover"></div>`; }
+
+      let skillsHtml = skills.map(s=>`<span class="skill">${s}</span>`).join(' ');
+      let linksHtml = links.map(l=>`<div><a href="${l}" target="_blank">${l}</a></div>`).join('');
+
+      // Experience blocks -> convert semicolon separated achievements into bullet list
+      const expHtml = experience.map(block=>{
+        const parts = block.split('|').map(p=>p.trim());
+        const title = parts[0]||''; const company = parts[1]||''; const dates = parts[2]||''; const achieves = (parts[3]||'').split(';').map(a=>a.trim()).filter(Boolean);
+        return `<div style="margin-bottom:10px"><strong>${title}</strong> — ${company} <span style="float:right">${dates}</span><ul>${achieves.map(a=>`<li>${a}</li>`).join('')}</ul></div>`;
+      }).join('');
+
+      const eduHtml = education.map(e=>{
+        const parts = e.split('|').map(p=>p.trim());
+        return `<div><strong>${parts[0]||''}</strong>, ${parts[1]||''} <span style="float:right">${parts[2]||''}</span><div class="small">Result: ${parts[3]||''}</div></div>`;
+      }).join('');
+
+      const certsHtml = certs.map(c=>`<li>${c}</li>`).join('');
+      const langsHtml = langs.map(l=>`<li>${l}</li>`).join('');
+
+      const templateStyles = {
+        modern: `
+          <div class="two-col">
+            <div class="left">
+              <h2 style="margin:0">${name}</h2>
+              <div style="color:var(--muted)">${role} • ${location}</div>
+              <div style="margin-top:12px">${summary}</div>
+
+              <h3 style="margin-top:14px">Experience</h3>
+              ${expHtml || '<div class="small">No experience provided.</div>'}
+
+              <h3 style="margin-top:12px">Projects</h3>
+              ${experience.length?experience.map(p=>`<div>${p}</div>`).join(''):'<div class="small">No projects provided.</div>'}
+
+              <h3 style="margin-top:12px">Education</h3>
+              ${eduHtml}
+            </div>
+            <div class="right">
+              ${headerPhotoHtml}
+              <h4>Contact</h4>
+              <div class="small">${phone}<br>${email}</div>
+
+              <h4 style="margin-top:10px">Skills</h4>
+              <div>${skillsHtml}</div>
+
+              <h4 style="margin-top:10px">Certifications</h4>
+              <ul>${certsHtml}</ul>
+
+              <h4 style="margin-top:10px">Languages</h4>
+              <ul>${langsHtml}</ul>
+
+              <h4 style="margin-top:10px">Links</h4>
+              ${linksHtml}
+            </div>
+          </div>
+        `,
+        minimal: `
+          <div>
+            <h2 style="margin:0">${name} — <span style="font-weight:500;color:var(--muted)">${role}</span></h2>
+            <div class="small">${location} • ${phone} • ${email}</div>
+            <hr>
+            <h3>Summary</h3>
+            <div>${summary}</div>
+            <h3>Skills</h3>
+            <div>${skillsHtml}</div>
+            <h3>Experience</h3>
+            ${expHtml}
+            <h3>Education</h3>
+            ${eduHtml}
+          </div>
+        `,
+        creative: `
+          <div style="border-left:6px solid #7c3aed;padding-left:12px">
+            <h2 style="margin:0">${name}</h2>
+            <div style="color:var(--muted)">${role}</div>
+            <div style="margin-top:12px">${summary}</div>
+            <h3 style="margin-top:12px">Key Skills</h3>
+            <div>${skillsHtml}</div>
+            <h3 style="margin-top:12px">Experience & Projects</h3>
+            ${expHtml}
+            <h3>Education</h3>
+            ${eduHtml}
+          </div>
+        `
+      };
+
+      const html = templateStyles[selectedTemplate] || templateStyles['modern'];
+      el('cv-preview').innerHTML = html;
+    }
+
+    el('generate').addEventListener('click', ()=>{ buildCV(); window.scrollTo({top:document.getElementById('cv-preview').offsetTop-20,behavior:'smooth'}); });
+
+    // Simple suggestion & proofreading (rudimentary) — replace 'responsible for' -> action verbs
+    el('suggest').addEventListener('click',()=>{
+      const s = el('summary').value;
+      if(!s){ el('summary').value = 'Hardworking professional with strong skills in ' + (el('skills').value||'data handling') + '. Seeking role as ' + (el('role').value||'your target role') + '.'; }
+      else { el('summary').value = s.replace(/responsible for/ig,'handled/managed').replace(/was/ig,''); }
+      alert('Suggestion applied. Review the summary.');
+    });
+    el('proof').addEventListener('click',()=>{
+      // Very simple: fix double spaces, trim
+      el('summary').value = el('summary').value.replace(/\s{2,}/g,' ').trim();
+      alert('Basic proofreading done. For advanced proofreading, consider copying text to ChatGPT writer.');
+    });
+
+    // EXPORT: PDF
+    el('export-pdf').addEventListener('click', async()=>{
+      await buildCV();
+      const node = el('cv-preview');
+      const canvas = await html2canvas(node, {scale:2});
+      const imgData = canvas.toDataURL('image/jpeg',0.95);
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({orientation:'portrait',unit:'pt',format:[canvas.width,canvas.height]});
+      pdf.addImage(imgData,'JPEG',0,0,canvas.width,canvas.height);
+      const name = `CV_${(el('name').value||'FullName').replace(/\s+/g,'_')}.pdf`;
+      pdf.save(name);
+    });
+
+    // EXPORT: PNG
+    el('export-png').addEventListener('click', async()=>{
+      await buildCV();
+      const node = el('cv-preview');
+      const canvas = await html2canvas(node, {scale:2});
+      canvas.toBlob(b=>{ saveAs(b, `CV_${(el('name').value||'FullName').replace(/\s+/g,'_')}.png`); }, 'image/png');
+    });
+
+    // EXPORT: TXT
+    el('export-txt').addEventListener('click', ()=>{
+      const textParts = [];
+      textParts.push(el('name').value);
+      textParts.push(el('role').value);
+      textParts.push('Location: '+el('location').value);
+      textParts.push('Phone: '+el('phone').value);
+      textParts.push('Email: '+el('email').value);
+      textParts.push('\nSummary:\n'+el('summary').value);
+      textParts.push('\nSkills:\n'+el('skills').value);
+      textParts.push('\nEducation:\n'+el('education').value);
+      textParts.push('\nExperience:\n'+el('experience').value);
+      const blob = new Blob([textParts.join('\n')],{type:'text/plain;charset=utf-8'});
+      saveAs(blob, `CV_${(el('name').value||'FullName').replace(/\s+/g,'_')}.txt`);
+    });
+
+    // EXPORT: DOCX (simple conversion)
+    el('export-docx').addEventListener('click', async()=>{
+      await buildCV();
+      const docx = window.docx;
+      const doc = new docx.Document();
+      const name = el('name').value || 'Full Name';
+      doc.addSection({properties:{},children:[ new docx.Paragraph({text:name,heading:docx.HeadingLevel.HEADING_1}), new docx.Paragraph({text:el('role').value}), new docx.Paragraph({text:'Location: '+el('location').value}), new docx.Paragraph({text:'Phone: '+el('phone').value}), new docx.Paragraph({text:'Email: '+el('email').value}), new docx.Paragraph({text:''}), new docx.Paragraph({text:'Summary:'}), new docx.Paragraph({text:el('summary').value}), new docx.Paragraph({text:''}), new docx.Paragraph({text:'Skills: '+el('skills').value}), new docx.Paragraph({text:''}), new docx.Paragraph({text:'Education: '+el('education').value}), new docx.Paragraph({text:''}), new docx.Paragraph({text:'Experience: '+el('experience').value}) ]});
+      const packer = new docx.Packer();
+      packer.toBlob(doc).then(blob=>{ saveAs(blob, `CV_${name.replace(/\s+/g,'_')}.docx`); });
+    });
+
+  </script></body>
+      </html>
